@@ -74,63 +74,44 @@ Shader "Martin/RaymarchShader"
                 return o;
             }
             float4 getDist(float3 p){
-                 if(_mirror  == 1){ 
+                float4 Scene;
+                if(_mirror  == 1){ 
                       float modX = pMod1(p.x, _modX);
                    //   float modY = pMod1(p.y, _modY);
                       float modZ = pMod1(p.z, _modZ);
                 }
+                float3 bPos = p - _box1.xyz;
+              
+                bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
+                bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
+                bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
+             
+                float3 cPos = bPos;
+                float4 Box = float4(_color.rgb, sdBox(bPos,1.));
+                float s = 1.;
+                bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
+                bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
+                bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
+                for( int m=0; m<5; m++ )
+                {
+                    float3 a = fmod((bPos+4)*s, 2.0 )-1.0;
+                    s *= 3.0;
+                    float3 r = abs(1.0 - 3.0*abs(a));
+                    float da = max(r.x,r.y);
+                    float db = max(r.y,r.z);
+                    float dc = max(r.z,r.x);
+                    float c = (min(da,min(db,dc))-1.0)/s;
 
-                // float4 Sphere1 = float4(_color.rgb, sdSphere(p - _sphere1.xyz, _sphere1.w));
-            
-                // float3 boxPos = p-_box1.xyz;
-                
-                //  boxPos.yz = mul(Rotate(_rotation.x), boxPos.yz);
-                //  boxPos.xz = mul(Rotate(_rotation.y), boxPos.xz);
-                //  boxPos.xy = mul(Rotate(_rotation.z), boxPos.xy);
+                    Box.w = max(Box.w,c);
 
-                // if(_replicateX > 0){ 
-                //     for(int x = 0; x < _replicateX; x++){
-                //         boxPos = abs(boxPos);
-                //         boxPos.x -= _offset;
-                //     }
-                // }
-                // if(_replicateY > 0) { 
-                //     for(int y = 0; y < _replicateY; y++){
-                //         boxPos = abs(boxPos);
-                //         boxPos.y -= _offset;
-                //     }
-                // }
-                // if(_replicateZ > 0){
-                //     for(int z = 0; z < _replicateZ; z++){
-                //         boxPos = abs(boxPos);
-                //         boxPos.z -= _offset;
-                //     }
-                // }
-           
-                // float4 Box1 = float4(_color.rgb, sdBox(boxPos, _box1.w));
-                
-                // float4 Plane1 = float4(1, 0, 1, p.y+1);
-                // float4 Scene;
-                // Scene = opSmoothColU(Plane1, Box1, _smoothness);
-                // return Scene;
+                }
 
 
 
-                float3 fraktP = p;
-                fraktP.yz = mul(Rotate(_rotation.x), fraktP.yz);
-                fraktP.xz = mul(Rotate(_rotation.y), fraktP.xz);
-                fraktP.xy = mul(Rotate(_rotation.z), fraktP.xy);
-                float3 colP = fraktP;
-                colP = float3(sin(colP.x*_Time.y), sin(colP.y*_Time.y), sin(colP.z*_Time.y));
-                // Scene = opColU(Plane1, Box1); 
-                
-                return opColU(float4(_color, sdFraktal(fraktP, _Power, _scale)),float4(_color, p.y+1.8));
-                // float3 fraktalPos = p;
-                // fraktalPos = abs(fraktalPos);
-                // fraktalPos.x -= 1;
-                // fraktalPos.y -= 1;
-                // fraktalPos.z -= 1;
-                // return float4 (_color.rgb, sdFraktal(fraktalPos, _Power, _scale.x));
+                float4 Plane = float4(1, 1, 1, p.y);
+                 
+                Scene = opColU(Box, Plane);
+                return Scene;
             }
             float2 RayMarch(float3 ro, float3 rd){
                 float dO = 0.;
@@ -153,7 +134,7 @@ Shader "Martin/RaymarchShader"
             }
             float3 getNormal(float3 p){
                 float d = getDist(p).w;
-                float2 e = float2(0.01, 0);
+                float2 e = float2(0.001, 0);
                 float3 n = d - float3(
                     getDist(p-e.xyy).w, 
                     getDist(p-e.yxy).w, 

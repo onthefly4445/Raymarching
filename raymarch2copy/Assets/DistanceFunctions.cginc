@@ -73,6 +73,15 @@ float sdCone( float3 p, float2 c )
     return d * ((q.x*c.y-q.y*c.x<0.0)?-1.0:1.0);
 }
 
+//Infinite Cross
+float sdCross(float3 p){ 
+  float da = max(abs(p.x), abs(p.y));
+  float db = max(abs(p.y), abs(p.z));
+  float dc = max(abs(p.z), abs(p.x));
+  return min(da,min(db,dc))-1.0;
+}
+
+//Fractal
 float sdFraktal(float3 p, float scale, float it){
     float3 a1 = float3(1,1,1);
   float3 a2 = float3(-1,-1,1);
