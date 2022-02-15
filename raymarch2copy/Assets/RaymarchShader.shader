@@ -85,32 +85,15 @@ Shader "Martin/RaymarchShader"
                 bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
                 bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
                 bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
-             
-                float3 cPos = bPos;
-                float4 Box = float4(_color.rgb, sdBox(bPos,1.));
-                float s = 1.;
-                bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
-                bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
-                bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
-                for( int m=0; m<5; m++ )
-                {
-                    float3 a = fmod((bPos+4)*s, 2.0 )-1.0;
-                    s *= 3.0;
-                    float3 r = abs(1.0 - 3.0*abs(a));
-                    float da = max(r.x,r.y);
-                    float db = max(r.y,r.z);
-                    float dc = max(r.z,r.x);
-                    float c = (min(da,min(db,dc))-1.0)/s;
+                bPos = fold(bPos,normalize(float3(1,0,1)));
+                bPos.x -= 1;
+                bPos = fold(bPos,normalize(float3(1,0,1)));
+                bPos.x -= 1;
 
-                    Box.w = max(Box.w,c);
-
-                }
-
-
-
+                float4 Fract = float4(_color.rgb, sdMengerSponge(bPos, 4.));
                 float4 Plane = float4(1, 1, 1, p.y);
                  
-                Scene = opColU(Box, Plane);
+                Scene = opColU(Fract, Plane);
                 return Scene;
             }
             float2 RayMarch(float3 ro, float3 rd){

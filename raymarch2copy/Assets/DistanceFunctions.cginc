@@ -81,7 +81,7 @@ float sdCross(float3 p){
   return min(da,min(db,dc))-1.0;
 }
 
-//Fractal
+//Sierpinsky trinagle
 float sdFraktal(float3 p, float scale, float it){
     float3 a1 = float3(1,1,1);
   float3 a2 = float3(-1,-1,1);
@@ -101,6 +101,23 @@ float sdFraktal(float3 p, float scale, float it){
 
 	return  length(p) * pow(scale, float(-n));
 
+}
+//Menger Sponge
+float sdMengerSponge(float3 p, float it){
+  float Box = sdBox(p,1.);
+  float s = 1.;
+  for( int i=0; i<it; i++ )
+  {
+      float3 a = fmod((p+4)*s, 2.0 )-1.0;
+      s *= 3.0;
+      float3 r = abs(1.0 - 3.0*abs(a));
+      float da = max(r.x,r.y);
+      float db = max(r.y,r.z);
+      float dc = max(r.z,r.x);
+      float c = (min(da,min(db,dc))-1.0)/s;
+      Box = max(Box,c);
+  }
+  return Box;
 }
 
 
@@ -177,4 +194,13 @@ float3 opRepLim( inout float3 p, inout float c, inout float3 l )
 {
     float3 q = p-c*clamp(round(p/c),-l,l);
     return q;
+}
+
+float3 fold(float3 p, float3 n)
+{
+  float t = dot(p,n); 
+  if (t<0.0) {
+     p-=2.0*t*n; 
+  }
+  return p;
 }
