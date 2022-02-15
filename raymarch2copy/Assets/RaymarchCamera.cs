@@ -7,6 +7,7 @@ using UnityEngine;
 public class RaymarchCamera : SceneViewFilter
 {
     public float mouseSensitivty = 300f;
+    public float moveSpeed = 20f;
     float xRotation = 0f;
     float yRotation = 0f; 
     void Start(){
@@ -21,6 +22,18 @@ public class RaymarchCamera : SceneViewFilter
 
         //transform.localRotation = Quaternion.Euler(, 0f, 0f);
         transform.localRotation = Quaternion.Euler(xRotation, -yRotation, 0f);
+        float x = Input.GetAxis("Horizontal");
+        float z = Input.GetAxis("Vertical");
+        float y = 0;
+
+        if(Input.GetKey(KeyCode.Space))
+            y = 0.7f;
+        else if(Input.GetKey(KeyCode.LeftShift))
+            y = -0.7f;
+
+        Vector3 dir = transform.right * x + transform.up * y + transform.forward * z;
+        transform.position += dir * Time.deltaTime;
+
     }
     
     

@@ -134,7 +134,7 @@ Shader "Martin/RaymarchShader"
             }
             float3 getNormal(float3 p){
                 float d = getDist(p).w;
-                float2 e = float2(0.001, 0);
+                float2 e = float2(0.0001, 0);
                 float3 n = d - float3(
                     getDist(p-e.xyy).w, 
                     getDist(p-e.yxy).w, 
