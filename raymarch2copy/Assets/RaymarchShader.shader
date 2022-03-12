@@ -81,27 +81,36 @@ Shader "Martin/RaymarchShader"
                       float modZ = pMod1(p.z, _modZ);
                 }
                 float3 bPos = p - _box1.xyz;
-              
-                bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
-                bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
-                bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
-               for (int i = 0; i <_scale; i++ ){
-                   bPos = fold(bPos, normalize(float3(_sphere1.x, -_sphere1.y, -_sphere1.z)));
-                   bPos.x -= 1;
-                   bPos = fold(bPos, normalize(float3(-_sphere1.x, _sphere1.y, -_sphere1.z)));
-                   bPos.y -= 1;
-                   bPos = fold(bPos, normalize(float3(-_sphere1.x, -_sphere1.y, _sphere1.z)));
-                   bPos.z -= 1;
-                 
-               }
+                float3 sPos = p - _sphere1.xyz;
+
+            //-------------------------MengerSponge-------------------------  
+            //     bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
+            //     bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
+            //     bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
+            //    for (int i = 0; i <_scale; i++ ){
+            //    //     bPos = fold(bPos, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
+            //         // if(bPos.x + bPos.y < 0.) bPos.xy = -bPos.yx;
+            //         // if(bPos.x + bPos.z < 0.) bPos.xz = -bPos.zx;
+            //         // if(bPos.y + bPos.z < 0.) bPos.zy = -bPos.yz;
+            //         bPos = fold(bPos, normalize(_sphere1.xyz));
+            //         bPos = abs(bPos);
+            //         bPos.x -= 1;
+            //         bPos.y -= 1; 
+            //         bPos.z -= 1;
+            //         bPos = fold(bPos, normalize(_sphere1.xyz));
+            //   //      bPos = fold(bPos, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
+                    
+            //    }
+            //-------------------------MengerSponge-------------------------
             
 
-                float4 Fract = float4(_color.rgb, sdMengerSponge(bPos, 4.));
-                float4 Box = float4(_color.rgb, sdBox(bPos, _box1.w));
+                float4 Menger = float4(_color.rgb, sdMengerSponge(bPos, 4.));
+                float4 Sierpinsky = float4(_color.rgb, sdFraktal(bPos, _Power, _scale));
+                float4 Box = opColS(float4(_color.rgb, sdCross(bPos)), float4(_color.rgb, sdBox(bPos, _box1.w)));
                 float4 Plane = float4(1, 1, 1, p.y);
                  
-                Scene = opColU(Box, Plane);
-                return Box;
+                Scene = opColU(Box , Plane);
+                return Scene;
             }
             float2 RayMarch(float3 ro, float3 rd){
                 float dO = 0.;
@@ -114,7 +123,7 @@ Shader "Martin/RaymarchShader"
                     float3 p = ro + rd * dO;
                     float4 dS = getDist(p);
                     if (dS.w < _surfDist){
-                        _difColor = dS.rgb; //+ float3(i/_maxSteps, i/_maxSteps, i/_maxSteps);
+                        _difColor = dS.rgb; // +float3(sin(2.*length(p)), cos(30.*length(p)) , sin(5.*length(p)))/2. ; //+ float3(i/_maxSteps, i/_maxSteps, i/_maxSteps);
                         break;
                     }
     
