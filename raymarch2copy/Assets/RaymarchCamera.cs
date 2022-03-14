@@ -32,7 +32,7 @@ public class RaymarchCamera : SceneViewFilter
             y = -0.7f;
 
         Vector3 dir = transform.right * x + transform.up * y + transform.forward * z;
-        transform.position += dir * Time.deltaTime;
+        transform.position += dir * Time.deltaTime*moveSpeed;
 
     }
     
@@ -110,7 +110,7 @@ public class RaymarchCamera : SceneViewFilter
     public Vector4 _box1;
     public Vector4 _sphere1;
     [Header("Fractal")]
-    [Range(0f, 3.0f)]
+    [Range(-3.0f, 3.0f)]
     public float _Power;
     public Vector3 _rotation;
     [Range(0f, 50.0f)]

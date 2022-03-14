@@ -81,6 +81,28 @@ float3 fold(float3 p, float3 n)
   }
   return p;
 }
+
+float3 sphereFold(float3 p, inout float dz, float minRadius2, float fixedRadius2) {
+	float r = length(p);
+  float r2 = dot(p,p);
+	if (r<minRadius2) { 
+		// linear inner scaling
+		float temp = (fixedRadius2/minRadius2);
+		p *= temp;
+		dz*= temp;
+	} else if (r2<fixedRadius2) { 
+		// this is the actual sphere inversion
+		float temp =(fixedRadius2/r2);
+		p *= temp;
+		dz*= temp;
+	}
+  return float3(p);
+}
+
+float3 boxFold(float3 p, float foldingLimit) {
+	p = clamp(p, -foldingLimit, foldingLimit) * 2.0 - p;
+  return p;
+}
 //--------------------------------------OBJECTS-------------------------------------------
 // Sphere
 // s: radius
@@ -187,14 +209,14 @@ float sdFraktal(float3 p, float scale, float it){
 
 }
 //Menger Sponge
-float sdMengerSponge(float3 p, float it){
-  float Box = sdBox(p,1.);
+float sdMengerSponge(float3 p, float it, float w){
+  float Box = sdBox(p, w);
   float s = 1.;
   for( int i=0; i<it; i++ )
   {
       float3 a = fmod((p+4)*s, 2.0 )-1.0;
       s *= 3.0;
-      float3 r = abs(1.0 - 3.0*abs(a));
+      float3 r = abs(1 - 3.0*abs(a));
       float da = max(r.x,r.y);
       float db = max(r.y,r.z);
       float dc = max(r.z,r.x);

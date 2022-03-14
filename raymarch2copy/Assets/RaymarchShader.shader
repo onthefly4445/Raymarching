@@ -83,40 +83,58 @@ Shader "Martin/RaymarchShader"
                 float3 bPos = p - _box1.xyz;
                 float3 sPos = p - _sphere1.xyz;
 
-            //-------------------------MengerSponge-------------------------  
-            //     bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
-            //     bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
-            //     bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
+                bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
+                bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
+                bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
+
+            // //-------------------------BoxFract-------------------------  
+            //    float3 foldVector = float3(sin(_Time.y)*10. - 40., -cos(_Time.y ) * 1.25 + 3.75 , cos(_Time.y ) * 50. - 50);
             //    for (int i = 0; i <_scale; i++ ){
             //    //     bPos = fold(bPos, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
             //         // if(bPos.x + bPos.y < 0.) bPos.xy = -bPos.yx;
             //         // if(bPos.x + bPos.z < 0.) bPos.xz = -bPos.zx;
             //         // if(bPos.y + bPos.z < 0.) bPos.zy = -bPos.yz;
-            //         bPos = fold(bPos, normalize(_sphere1.xyz));
+            //         bPos = fold(bPos, normalize(foldVector));
             //         bPos = abs(bPos);
             //         bPos.x -= 1;
-            //         bPos.y -= 1; 
-            //         bPos.z -= 1;
-            //         bPos = fold(bPos, normalize(_sphere1.xyz));
-            //   //      bPos = fold(bPos, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
+            //         bPos.y -= 5; 
+            //         bPos.z -= 0.5; 
+            //         bPos = fold(bPos, normalize(-foldVector));
+            //         _box1.w = sin(_Time.z)*2.5 + 4.;
+            //  //      bPos = fold(bPos, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
                     
             //    }
-            //-------------------------MengerSponge-------------------------
-            
+               
+               
+            //-------------------------MandelBoxWannabe-----------------
+                // float dR = 1.0;
+                // float3 offset = bPos;
+                // for (int i = 0; i <_scale; i++){
+                //     bPos = boxFold(bPos, _box1.w);
+                //     bPos = sphereFold(bPos, dR, 1., _box1.w);
+                    
+                //     bPos = _Power * bPos + offset;
+                //     dR = dR*abs(_Power) + 1.0;
+                // }
+                // float r = length(bPos)/abs(dR);
 
-                float4 Menger = float4(_color.rgb, sdMengerSponge(bPos, 4.));
+
+                float4 Menger = float4(_color.rgb, sdMengerSponge(bPos, 4., _box1.w));
                 float4 Sierpinsky = float4(_color.rgb, sdFraktal(bPos, _Power, _scale));
-                float4 Box = opColS(float4(_color.rgb, sdCross(bPos)), float4(_color.rgb, sdBox(bPos, _box1.w)));
+                float4 Box = float4(_color.rgb, sdBox(bPos, _box1.w));
+                float4 HollowBox = opColS(float4(_color.rgb, sdSphere(bPos, _box1.w*1.1)), float4(_color.rgb, sdBox(bPos, _box1.w)));
+                float4 Sphere = float4(_color.rgb, sdSphere(sPos, _sphere1.w));
                 float4 Plane = float4(1, 1, 1, p.y);
                  
-                Scene = opColU(Box , Plane);
+                Scene = opColU(Menger , Plane);
                 return Scene;
             }
             float2 RayMarch(float3 ro, float3 rd){
                 float dO = 0.;
                 int steps;
-                for (steps = 0; steps <_maxSteps; steps++){
+                for (int i = 0; i <_maxSteps; i++){
                     if (dO>_maxDistance){
+                        steps = i;
                         break;
                     } 
 
@@ -124,6 +142,7 @@ Shader "Martin/RaymarchShader"
                     float4 dS = getDist(p);
                     if (dS.w < _surfDist){
                         _difColor = dS.rgb; // +float3(sin(2.*length(p)), cos(30.*length(p)) , sin(5.*length(p)))/2. ; //+ float3(i/_maxSteps, i/_maxSteps, i/_maxSteps);
+                        steps = i;
                         break;
                     }
     
@@ -156,15 +175,15 @@ Shader "Martin/RaymarchShader"
                 return (1.0 - (ao * _AOIntensity));
 
             }
-            float getShadow(float3 p, float d, int steps, float k)
+            float getShadow(float3 p, float d, float k)
             {
                 float result = 1.0;
-                if(d <   length(_lightPos - p)) {
-                    return 0.1;
+                if(d < length(_lightPos - p)) {
+                    return 0.2;
                 }
                 return result;
             }   
-            float3 getLight(float3 p, float3 c){
+            float3 getLight(float3 p, float3 c, float3 ro, float3 rd){
                 float3 color = c.rgb * _colorIntensity;
                 
                 float3 lightPos = _lightPos;//float3( 20*sin(_Time.y), 20, 20*cos(_Time.y)); 
@@ -176,11 +195,12 @@ Shader "Martin/RaymarchShader"
                 float ao = ambientOcclusion(p, n);
                 
                 float dif = clamp(dot(n, l), 0.,1.);
-                float d = RayMarch(p+n*_surfDist*2., l).x;
-                int steps = RayMarch(p+n*_surfDist*2., l).y;
-                float shadow = getShadow(p, d, steps, 12);
+                float d = RayMarch(p + n*_surfDist*2., l).x;
+                float steps = RayMarch(ro, rd ).y;
+                float shadow = getShadow(p, d, 12);
+                float3 glow = float3(1., 1., 1.) * pow(steps/70., 2);
 
-                return dif * color * ao * shadow;
+                return dif * color * ao * shadow; //+ glow;
             }
             fixed4 frag(v2f i) : SV_Target
             {
@@ -192,7 +212,7 @@ Shader "Martin/RaymarchShader"
                 float d = RayMarch(ro, rd).x;
     
                 float3 p = ro + rd * d; 
-                float3 dif = getLight(p, _difColor);
+                float3 dif = getLight(p, _difColor, ro, rd);
                 col = dif + float3(0.1,0.1,0.1);
                 float4 fragColor = float4(col.rgb,1.0);
                 return fragColor;

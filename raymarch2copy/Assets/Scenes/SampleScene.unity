@@ -268,7 +268,7 @@ Camera:
     height: 1
   near clip plane: 0.3
   far clip plane: 1000
-  field of view: 43
+  field of view: 94
   orthographic: 0
   orthographic size: 5
   m_Depth: -1
@@ -294,7 +294,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.025, y: 1.82, z: 0.436}
+  m_LocalPosition: {x: 0, y: 10, z: -10}
   m_LocalScale: {x: 50, y: 50, z: 50}
   m_Children: []
   m_Father: {fileID: 0}
@@ -312,29 +312,29 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ac7e8c7caa6bcfa41bb40d2945e8c8cf, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  mouseSensitivty: 100
+  mouseSensitivty: 50
   moveSpeed: 20
   _shader: {fileID: 4800000, guid: 6c33e8752cc5eaf4b818ca3105ec369a, type: 3}
   _maxDistance: 300
   _maxSteps: 1000
   _surfDist: 0.001
-  _lightPos: {x: 20, y: 94.19, z: 20}
-  _AOStepsize: 0.01
-  _AOIntensity: 0
+  _lightPos: {x: 30.09, y: 24.98, z: -37}
+  _AOStepsize: 0.74
+  _AOIntensity: 0.687
   _AOIterations: 1
   _mirror: 0
-  _modX: 3.06
+  _modX: 100
   _modY: 0
-  _modZ: 3
+  _modZ: 100
   _replicateX: 2
   _replicateY: 2
   _replicateZ: 2
-  _offset: 1.43
+  _offset: 0
   _smoothness: 10.82
   _colorIntensity: 1
-  _color: {r: 0.9339623, g: 0.057271298, b: 0.057271298, a: 0}
-  _box1: {x: 0, y: 27.61, z: 0, w: 2.73}
-  _sphere1: {x: -333.8, y: 271.6, z: -183.5, w: 4.36}
-  _Power: 0.95
-  _rotation: {x: 3.1, y: 11.7, z: 0}
-  _scale: 19.2
+  _color: {r: 1, g: 1, b: 1, a: 0}
+  _box1: {x: 0, y: 4.75, z: 0, w: 1}
+  _sphere1: {x: -41.9, y: 10.51, z: -26.09, w: 3.3}
+  _Power: 0
+  _rotation: {x: 0, y: 5.52, z: 0}
+  _scale: 1.1
