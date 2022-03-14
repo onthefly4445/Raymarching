@@ -24,11 +24,15 @@ Shader "Martin/RaymarchShader"
             uniform float _maxDistance;
             uniform float _maxSteps;
             uniform float _surfDist;
+            uniform float4 _obj;
+            uniform float4 _box1;
+            uniform float4 _box2;
+            uniform float4 _box3;
             uniform float4 _sphere1;
+            uniform float4 _torus1;
             uniform float3 _rotation;
             uniform float _scale;
             uniform float _fractalScale;
-            uniform float4 _box1;
             uniform float3 _lightPos;
             uniform float _Power;
             uniform float _modX;
@@ -80,56 +84,72 @@ Shader "Martin/RaymarchShader"
                    //   float modY = pMod1(p.y, _modY);
                       float modZ = pMod1(p.z, _modZ);
                 }
-                _sphere1.y = sin(_Time.y)*1.5;
-                float3 boxP = p - _box1.xyz;
-                float3 sP = p - _sphere1.xyz;
+                _sphere1.y = sin(_Time.y)*2.;
+                float3 objP = p - _obj.xyz;
+                float3 boxP1 = p - _box1.xyz;
+                float3 boxP2 = p - _box2.xyz;
+                float3 boxP3 = p - _box3.xyz;
+                float3 sphP = p - _sphere1.xyz;
+                float3 torP = p - _torus1.xyz;
 
-                boxP.yz = mul(Rotate(_rotation.x), boxP.yz);
-                boxP.xz = mul(Rotate(_rotation.y), boxP.xz);
-                boxP.xy = mul(Rotate(_rotation.z), boxP.xy);
+                objP.yz = mul(Rotate(_rotation.x), objP.yz);
+                objP.xz = mul(Rotate(_rotation.y), objP.xz);
+                objP.xy = mul(Rotate(_rotation.z), objP.xy);
 
             // //-------------------------BoxFract-------------------------  
             //    float3 foldVector = float3(sin(_Time.y)*10. - 40., -cos(_Time.y ) * 1.25 + 3.75 , cos(_Time.y ) * 50. - 50);
             //    for (int i = 0; i <_scale; i++ ){
-            //    //     boxP = fold(boxP, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
-            //         // if(boxP.x + boxP.y < 0.) boxP.xy = -boxP.yx;
-            //         // if(boxP.x + boxP.z < 0.) boxP.xz = -boxP.zx;
-            //         // if(boxP.y + boxP.z < 0.) boxP.zy = -boxP.yz;
-            //         boxP = fold(boxP, normalize(foldVector));
-            //         boxP = abs(boxP);
-            //         boxP.x -= 1;
-            //         boxP.y -= 5; 
-            //         boxP.z -= 0.5; 
-            //         boxP = fold(boxP, normalize(-foldVector));
-            //         _box1.w = sin(_Time.z)*2.5 + 4.;
-            //  //      boxP = fold(boxP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
+            //    //     objP = fold(objP, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
+            //         // if(objP.x + objP.y < 0.) objP.xy = -objP.yx;
+            //         // if(objP.x + objP.z < 0.) objP.xz = -objP.zx;
+            //         // if(objP.y + objP.z < 0.) objP.zy = -objP.yz;
+            //         objP = fold(objP, normalize(foldVector));
+            //         objP = abs(objP);
+            //         objP.x -= 1;
+            //         objP.y -= 5; 
+            //         objP.z -= 0.5; 
+            //         objP = fold(objP, normalize(-foldVector));
+            //         _obj.w = sin(_Time.z)*2.5 + 4.;
+            //  //      objP = fold(objP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
                     
             //    }
                
                
             //-------------------------MandelBoxWannabe-----------------
                 // float dR = 1.0;
-                // float3 offset = boxP;
+                // float3 offset = objP;
                 // for (int i = 0; i <_scale; i++){
-                //     boxP = boxFold(boxP, _box1.w);
-                //     boxP = sphereFold(boxP, dR, 1., _box1.w);
+                //     objP = boxFold(objP, _obj.w);
+                //     objP = sphereFold(objP, dR, 1., _obj.w);
                     
-                //     boxP = _Power * boxP + offset;
+                //     objP = _Power * objP + offset;
                 //     dR = dR*abs(_Power) + 1.0;
                 // }
-                // float r = length(boxP)/abs(dR);
+                // float r = length(objP)/abs(dR);
 
 
-                float4 Menger = float4(_color.rgb, sdMengerSponge(boxP, 4., _box1.w));
-                float4 Sierpinsky = float4(_color.rgb, sdFraktal(boxP, _Power, _scale));
-                float4 Box = float4(_color.rgb, sdBox(boxP, _box1.w));
-                float4 HollowBox = opColS(float4(_color.rgb, sdSphere(boxP, _box1.w*1.1)), float4(_color.rgb, sdBox(boxP, _box1.w)));
-                float4 Sphere = float4(float3(abs(sin(_Time.x)), abs(cos(_Time.y)) , abs(sin(_Time.z)) ), sdSphere(sP, _sphere1.w));
                 float4 Plane = float4(1, 1, 1, p.y);
-                float4 Slicer = float4(_color.rgb, sdPlane(sP, normalize(float3(1., 1., 1.)), -1.));
-                float4 SlicedMenger = opColS(Slicer, Menger);
-                Scene = opSmoothColU(Sphere, Plane, _smoothness);
-                Scene = opColU(Scene, Box);
+                float4 Box1 = float4(_color.rgb, sdBox(boxP1, _box1.w));
+                float4 Box2 = float4(float3(1., 0., 0.), sdBox(float3(boxP3.x, boxP3.y, boxP3.z + cos(_Time.y)*_box3.w), _box3.w));
+                float4 Box3 = float4(_color.rgb, sdBox(boxP2, _box2.w));
+                float4 Cross = float4(_color.rgb, sdCross(boxP2, 2*_box1.w, .98*_box2.w));
+                float4 Sphere1 = float4(float3(1.,0.,0.), sdSphere(float3(boxP1.x, boxP1.y, boxP3.z + sin(_Time.y)*_box1.w*2), _box1.w));
+                float4 Sphere2 = float4(_color.rgb, sdSphere(boxP3, _box3.w*1.5));
+                float4 Torus = float4(float3(1., 0., 0.), sdTorus(float3(boxP2.x, boxP2.y,  sin(_Time.y)*_box3.w + boxP2.z) , float2(_box1.w/2., _box1.w/4.)));
+                float4 BoxFrame1 = float4(float3(1., 0., 0.), sdBoxFrame(boxP1, _box1.w));
+                float4 BoxFrame2 = float4(float3(1., 0., 0.), sdBoxFrame(boxP2, _box2.w));
+                float4 BoxFrame3 = float4(float3(1., 0., 0.), sdBoxFrame(float3(boxP3.x, boxP3.y, boxP3.z + cos(_Time.y)*_box3.w*2), _box3.w));
+                
+                float4 Menger = float4(_color.rgb, sdMengerSponge(objP, 4., _obj.w));
+                float4 Sierpinsky = float4(_color.rgb, sdFraktal(objP, _Power, _scale));
+                
+                Scene = opColU(Plane, Plane);
+                Scene = opColU(Scene, BoxFrame1);
+                Scene = opColU(Scene, BoxFrame2);
+                Scene = opColU(Scene, BoxFrame3);
+                Scene = opColU(Scene, opSmoothColU(Sphere1, Box1, _smoothness));
+                Scene = opColU(Scene, opSmoothColS(Box2, Sphere2, _smoothness));
+                Scene = opColU(Scene, opSmoothColI(Torus, Box3, _smoothness));
 
                 return Scene;
             }

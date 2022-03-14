@@ -95,20 +95,29 @@ public class RaymarchCamera : SceneViewFilter
 
     [Range(0, 50)]
     public int _replicateX;
+    
     [Range(0, 50)]
     public int _replicateY;
+    
     [Range(0, 50)]
     public int _replicateZ;
-
     public float _offset;
+
     [Header("Smooth transition")]
+    [Range(0f, 15f)]
     public float _smoothness;
     [Header("Color")]
     public float _colorIntensity;
     public Color _color;
     [Header("Objects")]
+    public Vector4 _obj;
     public Vector4 _box1;
+    public Vector4 _box2;
+    public Vector4 _box3;
+
+
     public Vector4 _sphere1;
+    public Vector4 _torus1;
     [Header("Fractal")]
     [Range(-3.0f, 3.0f)]
     public float _Power;
@@ -141,9 +150,14 @@ public class RaymarchCamera : SceneViewFilter
         _raymarchMaterial.SetFloat("_smoothness", _smoothness);
         _raymarchMaterial.SetFloat("_colorIntensity", _colorIntensity);
         _raymarchMaterial.SetVector("_sphere1", _sphere1);
+        _raymarchMaterial.SetVector("_obj", _obj);
+        _raymarchMaterial.SetVector("_box1", _box1);
+        _raymarchMaterial.SetVector("_box2", _box2);
+        _raymarchMaterial.SetVector("_box3", _box3);
+
+        _raymarchMaterial.SetVector("_torus1", _torus1);
         _raymarchMaterial.SetVector("_rotation", _rotation);
         _raymarchMaterial.SetFloat("_scale", _scale);
-        _raymarchMaterial.SetVector("_box1", _box1);
         //_raymarchMaterial.SetVector("_LightDir", _directionalLight? _directionalLight.forward : Vector3.down);
         _raymarchMaterial.SetColor("_color", _color);
         _raymarchMaterial.SetInt("_mirror", _mirror);

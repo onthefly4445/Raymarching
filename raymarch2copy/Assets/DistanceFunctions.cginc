@@ -54,10 +54,11 @@ float opSmoothSubtraction( float d1, float d2, float k ) {
 }
 
 // Smooth Color subtraction
-float opSmoothSubtraction( float d1, float d2, float k ) {
-    float h = clamp( 0.5 + 0.5*(d2.w-d1.w)/k, 0.0, 1.0 );
+float4 opSmoothColS( float4 d1, float4 d2, float k ) {
+    k = -k;
+    float h = clamp( 0.5 + 0.5*(d2.w+d1.w)/k, 0.0, 1.0 );
     float d = lerp( d2.w, -d1.w, h ) - k*h*(1.0-h);
-    float3 c = lerp(d2.rgb, -d1.rgb, h);
+    float3 c = lerp(d2.rgb, d1.rgb, h);
     return float4(c, d );
 }
 
@@ -66,6 +67,14 @@ float opSmoothIntersection( float d1, float d2, float k ) {
     float h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );
     return lerp( d2, d1, h ) + k*h*(1.0-h); 
 }
+
+float4 opSmoothColI( float4 d1, float4 d2, float k ) {
+    float h = clamp( 0.5 - 0.5*(d2.w - d1.w)/k, 0.0, 1.0 );
+    float d = lerp( d2.w, d1.w, h ) + k*h*(1.0-h);
+    float3 c = lerp(d2.rgb, d1.rgb, h);
+    return float4(c, d );
+}
+
 // Mod Position Axis
 float pMod1 (inout float p, float size)
 {
@@ -193,13 +202,25 @@ float sdCone( float3 p, float2 c )
     float d = length(q-c*max(dot(q,c), 0.0));
     return d * ((q.x*c.y-q.y*c.x<0.0)?-1.0:1.0);
 }
-
+//Cross
+float sdCross(float3 p, float l,  float w)
+{
+  float a = sdBox(p, float3(l, w, w));
+  float b = sdBox(p, float3(w, l, w));
+  float c = sdBox(p, float3(w, w, l));
+  return opU(a, opU(b, c));
+}
 //Infinite Cross
-float sdCross(float3 p){ 
+float sdInfCross(float3 p){ 
   float da = max(abs(p.x), abs(p.y));
   float db = max(abs(p.y), abs(p.z));
   float dc = max(abs(p.z), abs(p.x));
   return min(da,min(db,dc))-1.0;
+}
+//BoxFrame
+float sdBoxFrame(float3 p, float w) 
+{
+  return opS(sdCross(p, w*1.02, w*0.98), sdBox(p, w));
 }
 
 //Sierpinsky trinagle
