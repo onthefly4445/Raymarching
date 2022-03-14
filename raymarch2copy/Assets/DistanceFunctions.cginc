@@ -52,6 +52,15 @@ float opSmoothSubtraction( float d1, float d2, float k ) {
     float h = clamp( 0.5 - 0.5*(d2+d1)/k, 0.0, 1.0 );
     return lerp( d2, -d1, h ) + k*h*(1.0-h); 
 }
+
+// Smooth Color subtraction
+float opSmoothSubtraction( float d1, float d2, float k ) {
+    float h = clamp( 0.5 + 0.5*(d2.w-d1.w)/k, 0.0, 1.0 );
+    float d = lerp( d2.w, -d1.w, h ) - k*h*(1.0-h);
+    float3 c = lerp(d2.rgb, -d1.rgb, h);
+    return float4(c, d );
+}
+
 // Smooth intersection
 float opSmoothIntersection( float d1, float d2, float k ) {
     float h = clamp( 0.5 - 0.5*(d2-d1)/k, 0.0, 1.0 );
@@ -109,6 +118,12 @@ float3 boxFold(float3 p, float foldingLimit) {
 float sdSphere(float3 p, float s)
 {
 	return length(p) - s;
+}
+
+//Plane
+float sdPlane( float3 p, float3 n, float h )
+{
+    return dot(p,n) + h;
 }
 // Torus
 // t: x and y radius

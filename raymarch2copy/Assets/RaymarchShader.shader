@@ -80,53 +80,57 @@ Shader "Martin/RaymarchShader"
                    //   float modY = pMod1(p.y, _modY);
                       float modZ = pMod1(p.z, _modZ);
                 }
-                float3 bPos = p - _box1.xyz;
-                float3 sPos = p - _sphere1.xyz;
+                _sphere1.y = sin(_Time.y)*1.5;
+                float3 boxP = p - _box1.xyz;
+                float3 sP = p - _sphere1.xyz;
 
-                bPos.yz = mul(Rotate(_rotation.x), bPos.yz);
-                bPos.xz = mul(Rotate(_rotation.y), bPos.xz);
-                bPos.xy = mul(Rotate(_rotation.z), bPos.xy);
+                boxP.yz = mul(Rotate(_rotation.x), boxP.yz);
+                boxP.xz = mul(Rotate(_rotation.y), boxP.xz);
+                boxP.xy = mul(Rotate(_rotation.z), boxP.xy);
 
             // //-------------------------BoxFract-------------------------  
             //    float3 foldVector = float3(sin(_Time.y)*10. - 40., -cos(_Time.y ) * 1.25 + 3.75 , cos(_Time.y ) * 50. - 50);
             //    for (int i = 0; i <_scale; i++ ){
-            //    //     bPos = fold(bPos, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
-            //         // if(bPos.x + bPos.y < 0.) bPos.xy = -bPos.yx;
-            //         // if(bPos.x + bPos.z < 0.) bPos.xz = -bPos.zx;
-            //         // if(bPos.y + bPos.z < 0.) bPos.zy = -bPos.yz;
-            //         bPos = fold(bPos, normalize(foldVector));
-            //         bPos = abs(bPos);
-            //         bPos.x -= 1;
-            //         bPos.y -= 5; 
-            //         bPos.z -= 0.5; 
-            //         bPos = fold(bPos, normalize(-foldVector));
+            //    //     boxP = fold(boxP, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
+            //         // if(boxP.x + boxP.y < 0.) boxP.xy = -boxP.yx;
+            //         // if(boxP.x + boxP.z < 0.) boxP.xz = -boxP.zx;
+            //         // if(boxP.y + boxP.z < 0.) boxP.zy = -boxP.yz;
+            //         boxP = fold(boxP, normalize(foldVector));
+            //         boxP = abs(boxP);
+            //         boxP.x -= 1;
+            //         boxP.y -= 5; 
+            //         boxP.z -= 0.5; 
+            //         boxP = fold(boxP, normalize(-foldVector));
             //         _box1.w = sin(_Time.z)*2.5 + 4.;
-            //  //      bPos = fold(bPos, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
+            //  //      boxP = fold(boxP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
                     
             //    }
                
                
             //-------------------------MandelBoxWannabe-----------------
                 // float dR = 1.0;
-                // float3 offset = bPos;
+                // float3 offset = boxP;
                 // for (int i = 0; i <_scale; i++){
-                //     bPos = boxFold(bPos, _box1.w);
-                //     bPos = sphereFold(bPos, dR, 1., _box1.w);
+                //     boxP = boxFold(boxP, _box1.w);
+                //     boxP = sphereFold(boxP, dR, 1., _box1.w);
                     
-                //     bPos = _Power * bPos + offset;
+                //     boxP = _Power * boxP + offset;
                 //     dR = dR*abs(_Power) + 1.0;
                 // }
-                // float r = length(bPos)/abs(dR);
+                // float r = length(boxP)/abs(dR);
 
 
-                float4 Menger = float4(_color.rgb, sdMengerSponge(bPos, 4., _box1.w));
-                float4 Sierpinsky = float4(_color.rgb, sdFraktal(bPos, _Power, _scale));
-                float4 Box = float4(_color.rgb, sdBox(bPos, _box1.w));
-                float4 HollowBox = opColS(float4(_color.rgb, sdSphere(bPos, _box1.w*1.1)), float4(_color.rgb, sdBox(bPos, _box1.w)));
-                float4 Sphere = float4(_color.rgb, sdSphere(sPos, _sphere1.w));
+                float4 Menger = float4(_color.rgb, sdMengerSponge(boxP, 4., _box1.w));
+                float4 Sierpinsky = float4(_color.rgb, sdFraktal(boxP, _Power, _scale));
+                float4 Box = float4(_color.rgb, sdBox(boxP, _box1.w));
+                float4 HollowBox = opColS(float4(_color.rgb, sdSphere(boxP, _box1.w*1.1)), float4(_color.rgb, sdBox(boxP, _box1.w)));
+                float4 Sphere = float4(float3(abs(sin(_Time.x)), abs(cos(_Time.y)) , abs(sin(_Time.z)) ), sdSphere(sP, _sphere1.w));
                 float4 Plane = float4(1, 1, 1, p.y);
-                 
-                Scene = opColU(Menger , Plane);
+                float4 Slicer = float4(_color.rgb, sdPlane(sP, normalize(float3(1., 1., 1.)), -1.));
+                float4 SlicedMenger = opColS(Slicer, Menger);
+                Scene = opSmoothColU(Sphere, Plane, _smoothness);
+                Scene = opColU(Scene, Box);
+
                 return Scene;
             }
             float2 RayMarch(float3 ro, float3 rd){
