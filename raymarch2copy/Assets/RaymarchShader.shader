@@ -30,6 +30,7 @@ Shader "Martin/RaymarchShader"
             uniform float4 _box3;
             uniform float4 _sphere1;
             uniform float4 _torus1;
+            uniform int _rotate;
             uniform float3 _rotation;
             uniform float _scale;
             uniform float _fractalScale;
@@ -39,7 +40,10 @@ Shader "Martin/RaymarchShader"
             uniform float _modY;
             uniform float _modZ;
             uniform float3 _color;
+            uniform float3 _glowColor;
+            uniform float _glowIntensity;
             uniform int _mirror;
+            uniform int _smooth;
             uniform float _smoothness;
             uniform float3 _difColor;
             uniform float _colorIntensity = 1.;
@@ -127,19 +131,28 @@ Shader "Martin/RaymarchShader"
                 // }
                 // float r = length(objP)/abs(dR);
 
+            //--------------------------OBJECTS--------------------------
 
                 float4 Plane = float4(1, 1, 1, p.y);
-                float4 Box1 = float4(_color.rgb, sdBox(boxP1, _box1.w));
-                float4 Box2 = float4(float3(1., 0., 0.), sdBox(float3(boxP3.x, boxP3.y, boxP3.z + cos(_Time.y)*_box3.w), _box3.w));
-                float4 Box3 = float4(_color.rgb, sdBox(boxP2, _box2.w));
                 float4 Cross = float4(_color.rgb, sdCross(boxP2, 2*_box1.w, .98*_box2.w));
-                float4 Sphere1 = float4(float3(1.,0.,0.), sdSphere(float3(boxP1.x, boxP1.y, boxP3.z + sin(_Time.y)*_box1.w*2), _box1.w));
-                float4 Sphere2 = float4(_color.rgb, sdSphere(boxP3, _box3.w*1.5));
-                float4 Torus = float4(float3(1., 0., 0.), sdTorus(float3(boxP2.x, boxP2.y,  sin(_Time.y)*_box3.w + boxP2.z) , float2(_box1.w/2., _box1.w/4.)));
+                float4 Sphere1 = float4(float3(1.,0.,0.), sdSphere(float3(boxP1.x, boxP1.y, boxP1.z + sin(_Time.y)*_box1.w*2), _box1.w));
+                float4 Sphere2 = float4(_color.rgb, sdSphere(float3(boxP3.x, boxP3.y, boxP3.z + sin(_Time.y)*_box3.w*2), _box3.w*1.5));
+                float4 Torus = float4(float3(1., 0., 0.), sdTorus(float3(boxP2.x, boxP2.y,  sin(_Time.y)*_box3.w*1.5 + boxP2.z) , float2(_box1.w/1.75, _box1.w/3.5)));
+                
+                if(_rotate == 1){
+                    boxP1.xz = mul(Rotate(_Time.x*6. % 6.28), boxP1.xz);
+                    boxP2.xz = mul(Rotate(_Time.x*6. % 6.28), boxP2.xz);
+                    boxP3.xz = mul(Rotate(_Time.x*6. % 6.28), boxP3.xz);
+                }
+                
+                float4 Box1 = float4(_color.rgb, sdBox(boxP1, _box1.w));
+                float4 Box2 = float4(float3(1., 0., 0.), sdBox(boxP2, _box2.w));
+                float4 Box3 = float4(_color.rgb, sdBox(boxP3, _box3.w));
+                
                 float4 BoxFrame1 = float4(float3(1., 0., 0.), sdBoxFrame(boxP1, _box1.w));
                 float4 BoxFrame2 = float4(float3(1., 0., 0.), sdBoxFrame(boxP2, _box2.w));
-                float4 BoxFrame3 = float4(float3(1., 0., 0.), sdBoxFrame(float3(boxP3.x, boxP3.y, boxP3.z + cos(_Time.y)*_box3.w*2), _box3.w));
-                
+                float4 BoxFrame3 = float4(float3(1., 0., 0.), sdBoxFrame(boxP3, _box3.w));
+
                 float4 Menger = float4(_color.rgb, sdMengerSponge(objP, 4., _obj.w));
                 float4 Sierpinsky = float4(_color.rgb, sdFraktal(objP, _Power, _scale));
                 
@@ -147,10 +160,18 @@ Shader "Martin/RaymarchShader"
                 Scene = opColU(Scene, BoxFrame1);
                 Scene = opColU(Scene, BoxFrame2);
                 Scene = opColU(Scene, BoxFrame3);
-                Scene = opColU(Scene, opSmoothColU(Sphere1, Box1, _smoothness));
-                Scene = opColU(Scene, opSmoothColS(Box2, Sphere2, _smoothness));
-                Scene = opColU(Scene, opSmoothColI(Torus, Box3, _smoothness));
-
+                if(_smooth){
+                    Scene = opColU(Scene, opSmoothColU(Sphere1, Box1, _smoothness));
+                    Scene = opColU(Scene, opSmoothColS(Box3, Sphere2, _smoothness));
+                    Scene = opColU(Scene, opSmoothColI(Torus, Box2, _smoothness));
+                }
+                else{
+                    Scene = opColU(Scene, opColU(Sphere1, Box1));
+                    Scene = opColU(Scene, opColS(Box3, Sphere2));
+                    Scene = opColU(Scene, opColI(Torus, Box2));
+                    
+                }
+                
                 return Scene;
             }
             float2 RayMarch(float3 ro, float3 rd){
@@ -222,9 +243,9 @@ Shader "Martin/RaymarchShader"
                 float d = RayMarch(p + n*_surfDist*2., l).x;
                 float steps = RayMarch(ro, rd ).y;
                 float shadow = getShadow(p, d, 12);
-                float3 glow = float3(1., 1., 1.) * pow(steps/70., 2);
+                float3 glow = _glowColor * pow(steps/70., 2) * _glowIntensity;
 
-                return dif * color * ao * shadow; //+ glow;
+                return dif * color * ao * shadow + glow;
             }
             fixed4 frag(v2f i) : SV_Target
             {

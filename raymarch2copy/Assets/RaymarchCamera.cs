@@ -30,10 +30,40 @@ public class RaymarchCamera : SceneViewFilter
             y = 0.7f;
         else if(Input.GetKey(KeyCode.LeftShift))
             y = -0.7f;
+        if(Input.GetKeyUp(KeyCode.P)){
+            if(_smooth == 1){
+                _smoothBool = false;
+                _smooth = 0;
+            }
+            else{
+                _smoothBool = true;
+                _smooth = 1;    
+            }
+        }
+        if(Input.GetKeyUp(KeyCode.K))
+        {
+            _smoothness -= 0.1f;
+        }
+        if(Input.GetKeyUp(KeyCode.L))
+        {
+            _smoothness += 0.1f;
+        }
+        if(Input.GetKeyUp(KeyCode.R)){
+            if(_rotate == 1){
+                _rotateBool = false;
+                _rotate = 0;
+            }
+            else{
+                _rotateBool = true;
+                _rotate = 1;    
+            }
+        }
+        
 
         Vector3 dir = transform.right * x + transform.up * y + transform.forward * z;
         transform.position += dir * Time.deltaTime*moveSpeed;
-
+        _smooth = _smoothBool? 1 : 0;
+        _rotate = _rotateBool? 1 : 0;
     }
     
     
@@ -104,11 +134,18 @@ public class RaymarchCamera : SceneViewFilter
     public float _offset;
 
     [Header("Smooth transition")]
+    public bool _smoothBool;
+    int _smooth;
     [Range(0f, 15f)]
     public float _smoothness;
     [Header("Color")]
+    [Range(0f, 2f)]
     public float _colorIntensity;
     public Color _color;
+    [Header("Glow")]
+    [Range(0f, 2f)]
+    public float _glowIntensity;
+    public Color _glowColor;
     [Header("Objects")]
     public Vector4 _obj;
     public Vector4 _box1;
@@ -121,7 +158,12 @@ public class RaymarchCamera : SceneViewFilter
     [Header("Fractal")]
     [Range(-3.0f, 3.0f)]
     public float _Power;
+    [Header("Rotation")]
     public Vector3 _rotation;
+    public bool _rotateBool;
+    [Range(0, 1)]
+    public int _rotate;
+
     [Range(0f, 50.0f)]
     public float _scale;
    // public Transform _directionalLight;
@@ -147,6 +189,7 @@ public class RaymarchCamera : SceneViewFilter
         _raymarchMaterial.SetFloat("_modY", _modY);
         _raymarchMaterial.SetFloat("_modZ", _modZ);
         _raymarchMaterial.SetFloat("_Power", _Power);
+        _raymarchMaterial.SetInt("_smooth", _smooth);
         _raymarchMaterial.SetFloat("_smoothness", _smoothness);
         _raymarchMaterial.SetFloat("_colorIntensity", _colorIntensity);
         _raymarchMaterial.SetVector("_sphere1", _sphere1);
@@ -156,10 +199,13 @@ public class RaymarchCamera : SceneViewFilter
         _raymarchMaterial.SetVector("_box3", _box3);
 
         _raymarchMaterial.SetVector("_torus1", _torus1);
+        _raymarchMaterial.SetInt("_rotate", _rotate);
         _raymarchMaterial.SetVector("_rotation", _rotation);
         _raymarchMaterial.SetFloat("_scale", _scale);
         //_raymarchMaterial.SetVector("_LightDir", _directionalLight? _directionalLight.forward : Vector3.down);
         _raymarchMaterial.SetColor("_color", _color);
+        _raymarchMaterial.SetFloat("_glowIntensity", _glowIntensity);
+        _raymarchMaterial.SetColor("_glowColor", _glowColor);
         _raymarchMaterial.SetInt("_mirror", _mirror);
         _raymarchMaterial.SetInt("_replicateX", _replicateX);
         _raymarchMaterial.SetInt("_replicateY", _replicateY);

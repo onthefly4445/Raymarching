@@ -32,6 +32,12 @@ float opI(float d1, float d2)
 {
 	return max(d1, d2);
 }
+float4 opColI(float4 d1, float4 d2)
+{
+	float d = max(d1.w, d2.w);
+  return d == d1.w? d1 : d2;
+}
+
 
 // Smooth union
 float opSmoothUnion( float d1, float d2, float k ) {
