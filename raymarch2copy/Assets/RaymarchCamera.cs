@@ -58,12 +58,24 @@ public class RaymarchCamera : SceneViewFilter
                 _rotate = 1;    
             }
         }
+        if(Input.GetKeyUp(KeyCode.M)){
+            if(_mirror == 1){
+                _mirrorBool = false;
+                _mirror = 0;
+            }
+            else{
+                _mirrorBool = true;
+                _mirror = 1;    
+            }
+        }
         
 
         Vector3 dir = transform.right * x + transform.up * y + transform.forward * z;
         transform.position += dir * Time.deltaTime*moveSpeed;
         _smooth = _smoothBool? 1 : 0;
         _rotate = _rotateBool? 1 : 0;
+        _mirror = _mirrorBool? 1 : 0;
+
     }
     
     
@@ -117,8 +129,10 @@ public class RaymarchCamera : SceneViewFilter
     public int _AOIterations;
 
     [Header("Mirroring")]
+   
+    public bool _mirrorBool; 
     [Range(0, 1)]
-    public int _mirror;
+    int _mirror;
     public float _modX;
     public float _modY;
     public float _modZ;

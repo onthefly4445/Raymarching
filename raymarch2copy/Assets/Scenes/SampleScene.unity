@@ -322,7 +322,7 @@ MonoBehaviour:
   _AOStepsize: 0.01
   _AOIntensity: 0.687
   _AOIterations: 1
-  _mirror: 1
+  _mirrorBool: 0
   _modX: 100
   _modY: 0
   _modZ: 100
@@ -332,9 +332,9 @@ MonoBehaviour:
   _offset: 0
   _smoothBool: 1
   _smoothness: 0.66
-  _colorIntensity: 1
-  _color: {r: 0, g: 0, b: 1, a: 0}
-  _glowIntensity: 0
+  _colorIntensity: 0.91
+  _color: {r: 1, g: 0, b: 0, a: 0}
+  _glowIntensity: 0.82
   _glowColor: {r: 1, g: 1, b: 1, a: 0}
   _obj: {x: 0, y: 0, z: 0, w: 0}
   _box1: {x: 0, y: 3, z: 0, w: 1.5}
@@ -346,4 +346,4 @@ MonoBehaviour:
   _rotation: {x: 0, y: 0, z: 0}
   _rotateBool: 0
   _rotate: 0
-  _scale: 0
+  _scale: 10.6

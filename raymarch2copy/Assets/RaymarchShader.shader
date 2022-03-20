@@ -100,23 +100,24 @@ Shader "Martin/RaymarchShader"
                 objP.xz = mul(Rotate(_rotation.y), objP.xz);
                 objP.xy = mul(Rotate(_rotation.z), objP.xy);
 
-            // //-------------------------BoxFract-------------------------  
-            //    float3 foldVector = float3(sin(_Time.y)*10. - 40., -cos(_Time.y ) * 1.25 + 3.75 , cos(_Time.y ) * 50. - 50);
-            //    for (int i = 0; i <_scale; i++ ){
-            //    //     objP = fold(objP, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
-            //         // if(objP.x + objP.y < 0.) objP.xy = -objP.yx;
-            //         // if(objP.x + objP.z < 0.) objP.xz = -objP.zx;
-            //         // if(objP.y + objP.z < 0.) objP.zy = -objP.yz;
-            //         objP = fold(objP, normalize(foldVector));
-            //         objP = abs(objP);
-            //         objP.x -= 1;
-            //         objP.y -= 5; 
-            //         objP.z -= 0.5; 
-            //         objP = fold(objP, normalize(-foldVector));
-            //         _obj.w = sin(_Time.z)*2.5 + 4.;
-            //  //      objP = fold(objP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
-                    
-            //    }
+            //-------------------------BoxFract-------------------------  
+               float3 foldVector = float3(sin(_Time.y*1.7)*10. - 30., -cos(_Time.y*0.5 ) * 1.15 + 7.75 , cos(_Time.y ) * 50. - 50);
+               float3 objColor = float3(sin(_Time.y), 0., 0. );
+               float3 glowColor = float3(cos(_Time.y), 0., 0.); 
+               for (int i = 0; i <_scale; i++ ){
+               //     objP = fold(objP, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
+                    // if(objP.x + objP.y < 0.) objP.xy = -objP.yx;
+                    // if(objP.x + objP.z < 0.) objP.xz = -objP.zx;
+                    // if(objP.y + objP.z < 0.) objP.zy = -objP.yz;
+                    objP = fold(objP, normalize(foldVector));
+                    objP = abs(objP);
+                    objP.x -= 1;
+                    objP.y -= 5; 
+                    objP.z -= 0.5; 
+                    objP = fold(objP, normalize(-foldVector));
+                    _obj.w = sin(_Time.z)*2.5 + 4.;
+             //      objP = fold(objP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
+               }
                
                
             //-------------------------MandelBoxWannabe-----------------
@@ -138,7 +139,8 @@ Shader "Martin/RaymarchShader"
                 float4 Sphere1 = float4(float3(1.,0.,0.), sdSphere(float3(boxP1.x, boxP1.y, boxP1.z + sin(_Time.y)*_box1.w*2), _box1.w));
                 float4 Sphere2 = float4(_color.rgb, sdSphere(float3(boxP3.x, boxP3.y, boxP3.z + sin(_Time.y)*_box3.w*2), _box3.w*1.5));
                 float4 Torus = float4(float3(1., 0., 0.), sdTorus(float3(boxP2.x, boxP2.y,  sin(_Time.y)*_box3.w*1.5 + boxP2.z) , float2(_box1.w/1.75, _box1.w/3.5)));
-                
+                float4 HollowBox = opColS(float4 (objColor, sdSphere(objP, 1.1*_obj.w)), float4(objColor, sdBox(objP, _obj.w)));
+
                 if(_rotate == 1){
                     boxP1.xz = mul(Rotate(_Time.x*6. % 6.28), boxP1.xz);
                     boxP2.xz = mul(Rotate(_Time.x*6. % 6.28), boxP2.xz);
@@ -172,7 +174,7 @@ Shader "Martin/RaymarchShader"
                     
                 }
                 
-                return Scene;
+                return HollowBox;
             }
             float2 RayMarch(float3 ro, float3 rd){
                 float dO = 0.;
@@ -243,7 +245,7 @@ Shader "Martin/RaymarchShader"
                 float d = RayMarch(p + n*_surfDist*2., l).x;
                 float steps = RayMarch(ro, rd ).y;
                 float shadow = getShadow(p, d, 12);
-                float3 glow = _glowColor * pow(steps/70., 2) * _glowIntensity;
+                float3 glow = float3(1., 1.0, 1.0) * pow(steps/70., 2) * _glowIntensity;
 
                 return dif * color * ao * shadow + glow;
             }
