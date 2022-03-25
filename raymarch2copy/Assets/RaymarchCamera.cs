@@ -173,10 +173,11 @@ public class RaymarchCamera : SceneViewFilter
     [Range(-3.0f, 3.0f)]
     public float _Power;
     [Header("Rotation")]
-    public Vector3 _rotation;
     public bool _rotateBool;
     [Range(0, 1)]
-    public int _rotate;
+    int _rotate;
+
+    public Vector3 _rotation;
 
     [Range(0f, 50.0f)]
     public float _scale;
