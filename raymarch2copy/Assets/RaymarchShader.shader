@@ -51,6 +51,7 @@ Shader "Martin/RaymarchShader"
             uniform int _replicateY;
             uniform int _replicateZ;
             uniform float _offset;
+            uniform float _objScale;
 
             struct appdata
             {
@@ -76,7 +77,7 @@ Shader "Martin/RaymarchShader"
                 o.uv = v.uv;
                 o.ray = _CamFrustum[(int)index].xyz;
 
-                o.ray /= abs(o.ray.z);
+                o.ray = normalize(o.ray);
 
                 o.ray = mul(_CamToWorld, o.ray);
                 return o;
@@ -84,12 +85,12 @@ Shader "Martin/RaymarchShader"
             float4 getDist(float3 p){
                 float4 Scene;
                 if(_mirror  == 1){ 
-                      float modX = pMod1(p.x, _modX);
-                   //   float modY = pMod1(p.y, _modY);
-                      float modZ = pMod1(p.z, _modZ);
+                    if(_modX != 0)  float modX = pMod1(p.x, _modX);
+                    if(_modY != 0)  float modY = pMod1(p.y, _modY);
+                    if(_modZ != 0)  float modZ = pMod1(p.z, _modZ);
                 }
                 _sphere1.y = sin(_Time.y)*2.;
-                float3 objP = p - _obj.xyz;
+                float3 objP = (p - _obj.xyz)/_objScale;
                 float3 boxP1 = p - _box1.xyz;
                 float3 boxP2 = p - _box2.xyz;
                 float3 boxP3 = p - _box3.xyz;
@@ -119,32 +120,32 @@ Shader "Martin/RaymarchShader"
             //  //      objP = fold(objP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
             //   }
             //-------------------------RatationBoxFract--------------------------
-               float3 foldVector = float3(sin(_Time.y*1.7)*10. - 30., -cos(_Time.y*0.5 ) * 1.15 + 7.75 , cos(_Time.y ) * 50. - 50);
-               //float3 foldVector = float3(_torus1.x, _torus1.y, _torus1.z);
-               float3 objColor = float3(sin(_Time.y), 0., 0. );
-               float3 glowColor = float3(cos(_Time.y), 0., 0.); 
-               for (int i = 0; i <_scale; i++ ){
-               //     objP = fold(objP, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
-                    // if(objP.x + objP.y < 0.) objP.xy = -objP.yx;
-                    // if(objP.x + objP.z < 0.) objP.xz = -objP.zx;
-                    // if(objP.y + objP.z < 0.) objP.zy = -objP.yz;
-                  //  objP.yz = mul(Rotate(foldVector.x/50.), objP.yz);
-                  //  objP.xz = mul(Rotate(foldVector.y/50.), objP.xz);
-                  //  objP.xy = mul(Rotate(foldVector.z/50.), objP.xy);
+            //    float3 foldVector = float3(sin(_Time.y*1.7)*10. - 30., -cos(_Time.y*0.5 ) * 1.15 + 7.75 , cos(_Time.y ) * 50. - 50);
+            //    //float3 foldVector = float3(_torus1.x, _torus1.y, _torus1.z);
+                float3 objColor = float3(sin(_Time.y), 0., 0. );
+            //    float3 glowColor = float3(cos(_Time.y), 0., 0.); 
+            //    for (int i = 0; i <_scale; i++ ){
+            //    //     objP = fold(objP, normalize(float3(sin(_Time.z/50.), -cos(_Time.z/50.), sin(_Time.z/50.))));
+            //         // if(objP.x + objP.y < 0.) objP.xy = -objP.yx;
+            //         // if(objP.x + objP.z < 0.) objP.xz = -objP.zx;
+            //         // if(objP.y + objP.z < 0.) objP.zy = -objP.yz;
+            //       //  objP.yz = mul(Rotate(foldVector.x/50.), objP.yz);
+            //       //  objP.xz = mul(Rotate(foldVector.y/50.), objP.xz);
+            //       //  objP.xy = mul(Rotate(foldVector.z/50.), objP.xy);
 
-                    objP = fold(objP, normalize(foldVector));
-                    objP = abs(objP);
-                    objP.x -= 1.5;
-                    objP.y -= 3; 
-                    objP.z -= 0.75; 
+            //         objP = fold(objP, normalize(foldVector));
+            //         objP = abs(objP);
+            //         objP.x -= 1.5;
+            //         objP.y -= 3; 
+            //         objP.z -= 0.75; 
                
 
-                    objP = fold(objP, normalize(-foldVector));
+            //         objP = fold(objP, normalize(-foldVector));
 
                     
                   
-             //      objP = fold(objP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
-              }
+            //  //      objP = fold(objP, normalize(float3(cos(_Time.z/50.), sin(_Time.z/50.), cos(_Time.z/50.))));
+            //   }
                
             //-------------------------MandelBoxWannabe-----------------
                 // float dR = 1.0;
@@ -160,7 +161,7 @@ Shader "Martin/RaymarchShader"
 
             //--------------------------OBJECTS--------------------------
 
-                float4 Plane = float4(1, 1, 1, p.y);
+                float4 Plane = float4(1, 1, 1, p.y/_objScale);
                 float4 Cross = float4(_color.rgb, sdCross(boxP2, 2*_box1.w, .98*_box2.w));
                 float4 Sphere1 = float4(float3(1.,0.,0.), sdSphere(float3(boxP1.x, boxP1.y, boxP1.z + sin(_Time.y)*_box1.w*2), _box1.w));
                 float4 Sphere2 = float4(_color.rgb, sdSphere(float3(boxP3.x, boxP3.y, boxP3.z + sin(_Time.y)*_box3.w*2), _box3.w*1.5));
@@ -181,7 +182,7 @@ Shader "Martin/RaymarchShader"
                 float4 BoxFrame2 = float4(float3(1., 0., 0.), sdBoxFrame(boxP2, _box2.w));
                 float4 BoxFrame3 = float4(float3(1., 0., 0.), sdBoxFrame(boxP3, _box3.w));
 
-                float4 Menger = float4(_color.rgb, sdMengerSponge(objP, 4., _obj.w));
+                float4 Menger = float4(_color.rgb, sdMengerSponge(objP, 6., _obj.w));
                 float4 Sierpinsky = float4(_color.rgb, sdFraktal(objP, _Power, _scale));
                 
                 Scene = opColU(Plane, Plane);
@@ -199,8 +200,9 @@ Shader "Martin/RaymarchShader"
                     Scene = opColU(Scene, opColI(Torus, Box2));
                     
                 }
-                
-                return Menger;
+                float4 result = float4(opColU(Menger, Plane));
+                result.w = result.w * _objScale;
+                return result;
             }
             float2 RayMarch(float3 ro, float3 rd){
                 float dO = 0.;
@@ -259,7 +261,7 @@ Shader "Martin/RaymarchShader"
             float3 getLight(float3 p, float3 c, float3 ro, float3 rd){
                 float3 color = c.rgb * _colorIntensity;
                 
-                float3 lightPos = _lightPos;//float3( 20*sin(_Time.y), 20, 20*cos(_Time.y)); 
+                float3 lightPos = _lightPos; 
                 
                 float3 l = normalize(lightPos - p);
                 
@@ -271,7 +273,7 @@ Shader "Martin/RaymarchShader"
                 float d = RayMarch(p + n*_surfDist*2., l).x;
                 float steps = RayMarch(ro, rd ).y;
                 float shadow = getShadow(p, d, 12);
-                float3 glow = float3(1., 1.0, 1.0) * pow(steps/70., 2) * _glowIntensity;
+                float3 glow = _glowColor * pow(steps/70., 2) * _glowIntensity;
 
                 return dif * color * ao * shadow + glow;
             }
@@ -279,7 +281,7 @@ Shader "Martin/RaymarchShader"
             {
                 fixed3 col = tex2D(_MainTex, i.uv);
                // float3 col = 0;
-                float3 rd = normalize(i.ray.xyz);
+                float3 rd = i.ray.xyz;
                 float3 ro = _WorldSpaceCameraPos;
 
                 float d = RayMarch(ro, rd).x;

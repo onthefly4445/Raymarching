@@ -21,7 +21,7 @@ public class RaymarchCamera : SceneViewFilter
         xRotation = Mathf.Clamp(xRotation, -90f, 90f);
 
         //transform.localRotation = Quaternion.Euler(, 0f, 0f);
-        transform.localRotation = Quaternion.Euler(xRotation, -yRotation, 0f);
+      
         float x = Input.GetAxis("Horizontal");
         float z = Input.GetAxis("Vertical");
         float y = 0;
@@ -30,6 +30,20 @@ public class RaymarchCamera : SceneViewFilter
             y = 0.7f;
         else if(Input.GetKey(KeyCode.LeftShift))
             y = -0.7f;
+
+         Vector3 dir; 
+        if(_lockCameraBool)
+        {
+            dir = new Vector3(Mathf.Sin(Time.realtimeSinceStartup + Mathf.PI)*moveSpeed , 10 , Mathf.Cos(Time.realtimeSinceStartup+Mathf.PI)*moveSpeed);
+            transform.position = dir;
+            transform.localRotation = Quaternion.Euler(0f, (Time.realtimeSinceStartup/Mathf.PI)*180, 0f);
+        }
+        else{
+            dir = transform.right * x + transform.up * y + transform.forward * z;
+            transform.position += dir * Time.deltaTime*moveSpeed;
+            transform.localRotation = Quaternion.Euler(xRotation, -yRotation, 0f);
+        } 
+   
         if(Input.GetKeyUp(KeyCode.P)){
             if(_smooth == 1){
                 _smoothBool = false;
@@ -69,9 +83,6 @@ public class RaymarchCamera : SceneViewFilter
             }
         }
         
-
-        Vector3 dir = transform.right * x + transform.up * y + transform.forward * z;
-        transform.position += dir * Time.deltaTime*moveSpeed;
         _smooth = _smoothBool? 1 : 0;
         _rotate = _rotateBool? 1 : 0;
         _mirror = _mirrorBool? 1 : 0;
@@ -95,7 +106,7 @@ public class RaymarchCamera : SceneViewFilter
         }
     }
 
-        private Material _raymarchMat;
+    private Material _raymarchMat;
     
     public Camera _camera
     {
@@ -110,6 +121,7 @@ public class RaymarchCamera : SceneViewFilter
         }
 
     }
+    public bool _lockCameraBool;
     private Camera _cam;
     [Header("RayMarching")]
     [Range(1, 300)]
@@ -161,6 +173,8 @@ public class RaymarchCamera : SceneViewFilter
     public float _glowIntensity;
     public Color _glowColor;
     [Header("Objects")]
+    [Range(0f, 10f)]
+    public float _objScale;
     public Vector4 _obj;
     public Vector4 _box1;
     public Vector4 _box2;
@@ -181,6 +195,7 @@ public class RaymarchCamera : SceneViewFilter
 
     [Range(0f, 50.0f)]
     public float _scale;
+
    // public Transform _directionalLight;
 
     void OnRenderImage(RenderTexture source, RenderTexture destination)
@@ -208,6 +223,7 @@ public class RaymarchCamera : SceneViewFilter
         _raymarchMaterial.SetFloat("_smoothness", _smoothness);
         _raymarchMaterial.SetFloat("_colorIntensity", _colorIntensity);
         _raymarchMaterial.SetVector("_sphere1", _sphere1);
+        _raymarchMaterial.SetFloat("_objScale",_objScale);
         _raymarchMaterial.SetVector("_obj", _obj);
         _raymarchMaterial.SetVector("_box1", _box1);
         _raymarchMaterial.SetVector("_box2", _box2);
