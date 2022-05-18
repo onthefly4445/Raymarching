@@ -82,6 +82,15 @@ float4 opSmoothColI( float4 d1, float4 d2, float k ) {
 }
 
 // Mod Position Axis
+float repCoord(float coord, float s){
+    float3 q = fmod(abs(coord), s) - 0.5*s;
+    return q;
+}
+float3 repCoords(float3 p, float s){
+    float3 q = fmod(abs(p), s) - 0.5*s;
+    return q;
+}
+
 float pMod1 (inout float p, float size)
 {
 	float halfsize = size * 0.5;
@@ -138,6 +147,7 @@ float sdSphere(float3 p, float s)
 //Plane
 float sdPlane( float3 p, float3 n, float h )
 {
+    n = normalize(n);
     return dot(p,n) + h;
 }
 // Torus
@@ -256,14 +266,23 @@ float sdMengerSponge(float3 p, float it, float w){
   float s = 1.;
   for( int i=0; i<it; i++ )
   {
-      float3 a = fmod((p+4)*s, 2.0 )-1.0;
+      float3 a = fmod((p+2)*s, 2.0 )-1.0;
       s *= 3.0;
       float3 r = abs(1 - 3.0*abs(a));
-      float da = max(r.x,r.y);
-      float db = max(r.y,r.z);
-      float dc = max(r.z,r.x);
-      float c = (min(da,min(db,dc))-1.0)/s;
-      Box = max(Box,c);
+      float c = sdCross(r, 100, 1)/s;
+      Box = c;//max(Box,c);
+  }
+  return Box;
+}
+float sdMenger2(float3 p, float it, float w)
+{
+  float Box = sdBox(p, w);
+  float s = 1.;
+  for (int i = 0; i<it; i++){
+    float3 crossP = repCoords(p + w, 2*w/s);//, repCoord(p.y + w, 2*w/s), repCoord(p.z + w, 2*w/s));
+    float Cross = sdCross(crossP, 100., (w/3.)/s);
+    Box = opS(Cross, Box);
+    s*=3;
   }
   return Box;
 }

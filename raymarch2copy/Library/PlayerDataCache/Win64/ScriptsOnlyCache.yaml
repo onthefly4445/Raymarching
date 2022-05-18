@@ -355,7 +355,7 @@ ScriptsOnlyBuild:
     className: EventTrigger
   - hash:
       serializedVersion: 2
-      Hash: 8b6e13709e154a99257240fdaf112c95
+      Hash: c7035597a6b0654d501616d0d2464204
     assemblyName: Assembly-CSharp.dll
     namespaceName: 
     className: RaymarchCamera
@@ -476,4 +476,4 @@ ScriptsOnlyBuild:
   platform: 19
   scenePathNames:
   - Assets/Scenes/SampleScene.unity
-  playerPath: C:/Users/marti/OneDrive/Desktop/Houby.exe
+  playerPath: C:/Users/marti/OneDrive/Dokumenty/maturita/Houby.exe

@@ -34,9 +34,9 @@ public class RaymarchCamera : SceneViewFilter
          Vector3 dir; 
         if(_lockCameraBool)
         {
-            dir = new Vector3(Mathf.Sin(Time.realtimeSinceStartup + Mathf.PI)*moveSpeed , 10 , Mathf.Cos(Time.realtimeSinceStartup+Mathf.PI)*moveSpeed);
+            dir = new Vector3(Mathf.Sin(Time.realtimeSinceStartup + Mathf.PI)*moveSpeed , 5f  , Mathf.Cos(Time.realtimeSinceStartup+Mathf.PI)*moveSpeed);
             transform.position = dir;
-            transform.localRotation = Quaternion.Euler(0f, (Time.realtimeSinceStartup/Mathf.PI)*180, 0f);
+            transform.localRotation = Quaternion.Euler(0f, (Time.realtimeSinceStartup/Mathf.PI)*180, 0f);//(Time.realtimeSinceStartup/Mathf.PI)*90);
         }
         else{
             dir = transform.right * x + transform.up * y + transform.forward * z;
@@ -44,24 +44,7 @@ public class RaymarchCamera : SceneViewFilter
             transform.localRotation = Quaternion.Euler(xRotation, -yRotation, 0f);
         } 
    
-        if(Input.GetKeyUp(KeyCode.P)){
-            if(_smooth == 1){
-                _smoothBool = false;
-                _smooth = 0;
-            }
-            else{
-                _smoothBool = true;
-                _smooth = 1;    
-            }
-        }
-        if(Input.GetKeyUp(KeyCode.K))
-        {
-            _smoothness -= 0.1f;
-        }
-        if(Input.GetKeyUp(KeyCode.L))
-        {
-            _smoothness += 0.1f;
-        }
+        //Rotate
         if(Input.GetKeyUp(KeyCode.R)){
             if(_rotate == 1){
                 _rotateBool = false;
@@ -82,10 +65,44 @@ public class RaymarchCamera : SceneViewFilter
                 _mirror = 1;    
             }
         }
+
+         if(Input.GetKeyUp(KeyCode.L)){
+            if(_lockCameraBool){
+                _lockCameraBool = false;
+            }
+            else{
+                _lockCameraBool = true;
+            }
+        }
+        if(Input.GetKeyUp(KeyCode.O)){
+            if(_smoothness>0.1) _smoothness -= 0.1f; 
+        }
+        if(Input.GetKeyUp(KeyCode.P)){
+            _smoothness += 0.1f; 
+        }
+        if(Input.GetKeyUp(KeyCode.C)){
+            _change = (_change+1) % 3; 
+        }
         
-        _smooth = _smoothBool? 1 : 0;
+        if(Input.GetKeyUp(KeyCode.X)){
+            _scale += 1; 
+        }
+        
+        if(Input.GetKeyUp(KeyCode.Y)){
+            if(_scale >= 1) _scale -= 1; 
+        }
+        if(Input.GetKeyUp(KeyCode.F)){
+            _glowIntensity -= 0.1f; 
+        }
+        if(Input.GetKeyUp(KeyCode.G)){
+            _glowIntensity += 0.1f; 
+        }
         _rotate = _rotateBool? 1 : 0;
         _mirror = _mirrorBool? 1 : 0;
+        _boxInt = _showBox? 1 : 0;
+        _sphereInt = _showSphere? 1 : 0;
+        _torusInt = _showTorus? 1 : 0;
+
 
     }
     
@@ -122,6 +139,8 @@ public class RaymarchCamera : SceneViewFilter
 
     }
     public bool _lockCameraBool;
+    int _lockCam;
+    int _change;
     private Camera _cam;
     [Header("RayMarching")]
     [Range(1, 300)]
@@ -160,7 +179,7 @@ public class RaymarchCamera : SceneViewFilter
     public float _offset;
 
     [Header("Smooth transition")]
-    public bool _smoothBool;
+    public bool _smoothTransition;
     int _smooth;
     [Range(0f, 15f)]
     public float _smoothness;
@@ -176,13 +195,24 @@ public class RaymarchCamera : SceneViewFilter
     [Range(0f, 10f)]
     public float _objScale;
     public Vector4 _obj;
-    public Vector4 _box1;
-    public Vector4 _box2;
-    public Vector4 _box3;
-
-
-    public Vector4 _sphere1;
-    public Vector4 _torus1;
+    [Header("Box")]
+    public bool _showBox;
+    public bool _smoothBox;
+    int _boxInt;
+    public Color _boxColor;
+    public Vector4 _box;
+    [Header("Sphere")]
+    public bool _showSphere;
+    public bool _smoothSphere;
+    int _sphereInt;
+    public Color _sphereColor;
+    public Vector4 _sphere;
+    [Header("Torus")]
+    public bool _showTorus;
+    public bool _smoothTorus;
+    int _torusInt;
+    public Color _torusColor;
+    public Vector4 _torus;
     [Header("Fractal")]
     [Range(-3.0f, 3.0f)]
     public float _Power;
@@ -219,17 +249,13 @@ public class RaymarchCamera : SceneViewFilter
         _raymarchMaterial.SetFloat("_modY", _modY);
         _raymarchMaterial.SetFloat("_modZ", _modZ);
         _raymarchMaterial.SetFloat("_Power", _Power);
-        _raymarchMaterial.SetInt("_smooth", _smooth);
         _raymarchMaterial.SetFloat("_smoothness", _smoothness);
         _raymarchMaterial.SetFloat("_colorIntensity", _colorIntensity);
-        _raymarchMaterial.SetVector("_sphere1", _sphere1);
+        _raymarchMaterial.SetVector("_sphere", _sphere);
         _raymarchMaterial.SetFloat("_objScale",_objScale);
         _raymarchMaterial.SetVector("_obj", _obj);
-        _raymarchMaterial.SetVector("_box1", _box1);
-        _raymarchMaterial.SetVector("_box2", _box2);
-        _raymarchMaterial.SetVector("_box3", _box3);
-
-        _raymarchMaterial.SetVector("_torus1", _torus1);
+        _raymarchMaterial.SetVector("_box", _box);
+        _raymarchMaterial.SetVector("_torus", _torus);
         _raymarchMaterial.SetInt("_rotate", _rotate);
         _raymarchMaterial.SetVector("_rotation", _rotation);
         _raymarchMaterial.SetFloat("_scale", _scale);
@@ -242,15 +268,20 @@ public class RaymarchCamera : SceneViewFilter
         _raymarchMaterial.SetInt("_replicateY", _replicateY);
         _raymarchMaterial.SetInt("_replicateZ", _replicateZ);
         _raymarchMaterial.SetFloat("_offset", _offset);
-
+        _raymarchMaterial.SetInt("_boxInt", _boxInt);
+        _raymarchMaterial.SetInt("_sphereInt", _sphereInt);
+        _raymarchMaterial.SetInt("_torusInt", _torusInt);
+        _raymarchMaterial.SetInt("_change", _change);
+        _raymarchMaterial.SetColor("_boxColor", _boxColor);
+        _raymarchMaterial.SetColor("_sphereColor", _sphereColor);
+        _raymarchMaterial.SetColor("_torusColor", _torusColor);
         RenderTexture.active = destination;
         _raymarchMaterial.SetTexture("_MainTex", source);
         GL.PushMatrix();
         GL.LoadOrtho();
         _raymarchMaterial.SetPass(0);
         GL.Begin(GL.QUADS);
-
-
+        
         //Bottom Left
         GL.MultiTexCoord2(0, 0.0f, 0.0f);
         GL.Vertex3(0.0f, 0.0f, 3.0f);
@@ -263,9 +294,6 @@ public class RaymarchCamera : SceneViewFilter
         //Top Left
         GL.MultiTexCoord2(0, 0.0f, 1.0f);
         GL.Vertex3(0.0f, 1.0f, 0.0f);
-        
-       
-       
 
         GL.End();
         GL.PopMatrix();
